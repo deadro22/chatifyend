@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "back-deploy": "git add . && git commit -m 'fr_chs && git push -u origin master",
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
