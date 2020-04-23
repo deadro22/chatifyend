@@ -6,7 +6,7 @@ const cors = require("cors");
 
 module.exports = function (app) {
   dotenv.config();
-  app.use(cors({ origin: "http://36223094.ngrok.io", credentials: true }));
+  app.use(cors({ origin: process.env.ALLOWED_DOMAINS, credentials: true }));
   app.use(express.json());
   app.use(error);
   require("./sessions_handler_stp")(app);
