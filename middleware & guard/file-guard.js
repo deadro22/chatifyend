@@ -1,4 +1,6 @@
 const { images } = require("../models/FileModel");
+const multer = require("multer");
+const Datauri = require("datauri");
 
 module.exports.createImage = async function (
   topicCategory,
@@ -19,4 +21,17 @@ module.exports.createImage = async function (
 
   await p_image.save();
   return p_image;
+};
+
+module.exports.uploadSetup = () => {
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 50000000,
+      files: 1,
+      fieldSize: 1024 * 1024 * 50,
+    },
+  });
+  const duri = new Datauri();
+  return { duri, upload };
 };

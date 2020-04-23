@@ -1,23 +1,19 @@
 const express = require("express");
 const router = express.Router();
 const { isloggedIn } = require("../middleware & guard/auth-guard");
-const { createImage } = require("../middleware & guard/file-guard");
 const { users } = require("../models/UsersModel");
 const { posts } = require("../models/PostModel");
-const { images } = require("../models/FileModel");
-const multer = require("multer");
 const {
   getProfile,
   PrivateProfile,
 } = require("../middleware & guard/users-guard");
+const { uploadSetup } = require("../middleware & guard/file-guard");
+const cloudinary = require("cloudinary").v2;
+const path = require("path");
 
 router.use(isloggedIn);
 
-const upload = multer({
-  limits: {
-    fieldSize: 1024 * 1024 * 25,
-  },
-});
+const { duri, upload } = uploadSetup();
 
 router.get("/home", async (req, res) => {
   const authUser = await users.findOne({ _id: req.user._id });
@@ -69,46 +65,47 @@ router.post(
     if (!us_prf) return res.status(404).send("User does not exist");
     if (!us_prf._id.equals(req.user._id))
       return res.status(403).send("unauthorized: not your profile");
-    if (req.file) {
-      if (us_prf.profileImage || us_prf.profileImage !== "") {
-        await images.findOneAndUpdate(
-          { imageNID: us_prf.profileImage, topicCategory: "profile-image" },
-          {
-            imageContent: req.file.buffer,
-            imageType: req.file.mimetype,
-            imageName: req.file.originalname,
-          }
-        );
-      } else {
-        const currTimeImageName = new Date().getTime().toString();
-        const profileImage = await createImage(
-          "profile-image",
-          us_prf._id,
-          currTimeImageName,
-          req.file.originalname,
-          req.file.mimetype,
-          req.file.buffer
-        );
-        req.body.profileImage = profileImage.imageNID;
-      }
-    }
 
-    const profileUpdateData = {};
-    if (req.body.username) profileUpdateData.username = req.body.username;
-    if (req.body.profileDescription)
-      profileUpdateData.profileDescription = req.body.profileDescription;
-    if (req.body.profileImage)
-      profileUpdateData.profileImage = req.body.profileImage;
-    const newUser = await users
-      .findOneAndUpdate(
-        { _id: us_prf._id },
-        {
-          $set: profileUpdateData,
-        },
-        { new: true }
-      )
-      .select("username");
-    res.send({ username: newUser.username });
+    if (!req.file) {
+      const profileUpdateData = {};
+      if (req.body.username) profileUpdateData.username = req.body.username;
+      if (req.body.profileDescription)
+        profileUpdateData.profileDescription = req.body.profileDescription;
+      const newUser = await users
+        .findOneAndUpdate(
+          { _id: us_prf._id },
+          {
+            $set: profileUpdateData,
+          },
+          { new: true }
+        )
+        .select("username");
+      res.send({ username: newUser.username });
+    } else {
+      duri.format(
+        path.extname(req.file.originalname).toString(),
+        req.file.buffer
+      );
+      cloudinary.uploader.upload(duri.content, async (err, ress) => {
+        let prfImageUpdated = ress.secure_url;
+        const profileUpdateData = {};
+        if (req.body.username) profileUpdateData.username = req.body.username;
+        if (req.body.profileDescription)
+          profileUpdateData.profileDescription = req.body.profileDescription;
+        if (prfImageUpdated && prfImageUpdated !== "")
+          profileUpdateData.profileImage = prfImageUpdated;
+        const newUser = await users
+          .findOneAndUpdate(
+            { _id: us_prf._id },
+            {
+              $set: profileUpdateData,
+            },
+            { new: true }
+          )
+          .select("username");
+        res.send({ username: newUser.username });
+      });
+    }
   }
 );
 

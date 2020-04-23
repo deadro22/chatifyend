@@ -25,13 +25,15 @@ module.exports.createPost = async function (
   postId,
   postOwner,
   postHeader,
-  postDate
+  postDate,
+  postPrevImage
 ) {
   const newPost = new posts({
     postId: postId,
     postOwner: postOwner,
     postHeader: postHeader,
     postDate: postDate,
+    postPreviewHolder: postPrevImage,
   });
 
   await newPost.save();

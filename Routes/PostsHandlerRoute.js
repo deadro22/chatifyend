@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const path = require("path");
 const { isloggedIn } = require("../middleware & guard/auth-guard");
 const { users } = require("../models/UsersModel");
 const { posts, genPostId } = require("../models/PostModel");
@@ -8,17 +9,13 @@ const {
   isPostOwner,
   createPost,
 } = require("../middleware & guard/posts-guard");
-const { createImage } = require("../middleware & guard/file-guard");
+const { uploadSetup } = require("../middleware & guard/file-guard");
+const cloudinary = require("cloudinary").v2;
 const { comments } = require("../models/CommentsModel");
-const multer = require("multer");
 
 router.use(isloggedIn);
 
-const upload = multer({
-  limits: {
-    fieldSize: 1024 * 1024 * 2,
-  },
-});
+const { duri, upload } = uploadSetup();
 
 router.get("/rev/:postId", async (req, res) => {
   const post = await posts
@@ -58,7 +55,7 @@ router.get("/rev/:post_id/:postId/comments", async (req, res) => {
 
 router.post(
   "/post/:username/new",
-  upload.single("post_image"),
+  upload.single("post_prev"),
   async (req, res) => {
     const user = await users.findOne({ username: req.params.username });
     if (!user) return res.status(404).send("Invalid user");
@@ -67,31 +64,29 @@ router.post(
     if (!isPostOwner(user, req))
       return res.status(403).send("unauthorized: not your profile");
     if (!req.file) return res.status(422).send("Image required");
-    const currTimeImageName = new Date().getTime().toString();
-    const newPost = await createPost(
-      genPostId(),
-      user._id,
-      req.body.postHeader,
-      new Date()
-    );
-    const comment = new comments({
-      commentPost: newPost._id,
-    });
-    user.posts.push(newPost._id);
-    await comment.save();
-    const p_image = await createImage(
-      "post-image",
-      newPost._id,
-      currTimeImageName,
-      req.file.originalname,
-      req.file.mimetype,
+    duri.format(
+      path.extname(req.file.originalname).toString(),
       req.file.buffer
     );
-    newPost.postComments.push(comment._id);
-    newPost.postPreviewHolder = "img_p_" + currTimeImageName;
-    await newPost.save();
-    await user.save();
-    res.send(newPost);
+    cloudinary.uploader.upload(duri.content, async (err, ress) => {
+      const newPost = await createPost(
+        genPostId(),
+        user._id,
+        req.body.postHeader,
+        new Date(),
+        ress.secure_url
+      );
+      const comment = new comments({
+        commentPost: newPost._id,
+      });
+      user.posts.push(newPost._id);
+      await comment.save();
+      if (err) return new Error("Failed to load your image");
+      newPost.postComments.push(comment._id);
+      await newPost.save();
+      await user.save();
+      res.send(newPost);
+    });
   }
 );
 

@@ -8,9 +8,7 @@ const image = new mongoose.Schema({
   },
   holderId: { type: mongoose.Schema.Types.ObjectId },
   imageNID: { type: String, required: true, unique: true },
-  imageName: { type: String, required: true },
-  imageType: { type: String, required: true },
-  imageContent: { type: Buffer, required: true },
+  imageContent: { type: String, required: true },
 });
 
 const images = mongoose.model("images", image);
