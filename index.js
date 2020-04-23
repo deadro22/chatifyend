@@ -8,6 +8,6 @@ require("./middleHandler")(app);
 require("./db/mongoConnection")();
 require("./validators/socketSetup")(io);
 
-http.listen(process.env.CONNECTION_PORT || 80, () => {
+http.listen(process.env.PORT || 80, () => {
   console.log("App started at port", process.env.CONNECTION_PORT);
 });
