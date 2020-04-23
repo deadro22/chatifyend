@@ -18,6 +18,7 @@ module.exports = function (app) {
         maxAge: 1000 * 24 * 60 * 60 * 365,
         httpOnly: true,
         secure: true,
+        sameSite: "strict",
       },
     })
   );
