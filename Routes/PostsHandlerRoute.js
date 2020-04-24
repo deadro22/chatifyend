@@ -75,7 +75,11 @@ router.post(
     console.log(publicIdFl);
     cloudinary.uploader.upload(
       duri.content,
-      { public_id: publicIdFl + file_buff + new Date().getTime(), quality: 80 },
+      {
+        public_id: publicIdFl + file_buff + new Date().getTime(),
+        quality: 80,
+        resource_type: "raw",
+      },
       async (err, ress) => {
         try {
           if (err) throw err;
