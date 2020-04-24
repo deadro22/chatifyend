@@ -86,25 +86,35 @@ router.post(
         path.extname(req.file.originalname).toString(),
         req.file.buffer
       );
-      cloudinary.uploader.upload(duri.content, async (err, ress) => {
-        let prfImageUpdated = ress.secure_url;
-        const profileUpdateData = {};
-        if (req.body.username) profileUpdateData.username = req.body.username;
-        if (req.body.profileDescription)
-          profileUpdateData.profileDescription = req.body.profileDescription;
-        if (prfImageUpdated && prfImageUpdated !== "")
-          profileUpdateData.profileImage = prfImageUpdated;
-        const newUser = await users
-          .findOneAndUpdate(
-            { _id: us_prf._id },
-            {
-              $set: profileUpdateData,
-            },
-            { new: true }
-          )
-          .select("username");
-        res.send({ username: newUser.username });
-      });
+      cloudinary.uploader.upload(
+        duri.content,
+        {
+          quality: 50,
+          public_id:
+            "images/uploads/profilepics/" +
+            new Date().getTime() +
+            us_prf.username,
+        },
+        async (err, ress) => {
+          let prfImageUpdated = ress.secure_url;
+          const profileUpdateData = {};
+          if (req.body.username) profileUpdateData.username = req.body.username;
+          if (req.body.profileDescription)
+            profileUpdateData.profileDescription = req.body.profileDescription;
+          if (prfImageUpdated && prfImageUpdated !== "")
+            profileUpdateData.profileImage = prfImageUpdated;
+          const newUser = await users
+            .findOneAndUpdate(
+              { _id: us_prf._id },
+              {
+                $set: profileUpdateData,
+              },
+              { new: true }
+            )
+            .select("username");
+          res.send({ username: newUser.username });
+        }
+      );
     }
   }
 );

@@ -5,7 +5,7 @@ module.exports.getProfile = async function (req, res, data, limit) {
     .findOne({ username: data })
     .populate({
       path: "posts",
-      select: "postId postPreviewHolder postDate",
+      select: "postId postPreviewHolder postDate PreviewHolderType",
       options: { sort: { postDate: -1 }, limit: 9, skip: Number(limit) },
     })
     .select("-__v -password");

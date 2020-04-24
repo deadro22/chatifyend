@@ -10,7 +10,7 @@ const post = new mongoose.Schema({
   postId: { type: String, required: true, unique: true },
   postHeader: { type: String },
   postPreviewHolder: { type: String },
-  PreviewHolderType: { type: String, required: true, enum: ["video", "image"] },
+  PreviewHolderType: { type: String, required: true },
   postLikes: { type: Number, default: 0 },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "users" }],
   postComments: [{ type: mongoose.Schema.Types.ObjectId, ref: "comments" }],

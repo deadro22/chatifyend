@@ -12,6 +12,7 @@ const {
 const { uploadSetup } = require("../middleware & guard/file-guard");
 const cloudinary = require("cloudinary").v2;
 const { comments } = require("../models/CommentsModel");
+const crypto = require("crypto");
 
 router.use(isloggedIn);
 
@@ -63,30 +64,46 @@ router.post(
       return res.status(422).send("Post header required");
     if (!isPostOwner(user, req))
       return res.status(403).send("unauthorized: not your profile");
-    if (!req.file) return res.status(422).send("Image required");
+    if (!req.file) return res.status(422).send("Image or video required");
     duri.format(
       path.extname(req.file.originalname).toString(),
       req.file.buffer
     );
-    cloudinary.uploader.upload(duri.content, async (err, ress) => {
-      const newPost = await createPost(
-        genPostId(),
-        user._id,
-        req.body.postHeader,
-        new Date(),
-        ress.secure_url
-      );
-      const comment = new comments({
-        commentPost: newPost._id,
-      });
-      user.posts.push(newPost._id);
-      await comment.save();
-      if (err) return new Error("Failed to load your image");
-      newPost.postComments.push(comment._id);
-      await newPost.save();
-      await user.save();
-      res.send(newPost);
-    });
+    const file_buff = crypto.randomBytes(16).toString("hex");
+    const publicIdFl =
+      req.file.mimetype === "video/mp4" ? "videos/uploads/" : "images/uploads/";
+    console.log(publicIdFl);
+    cloudinary.uploader.upload(
+      duri.content,
+      { public_id: publicIdFl + file_buff + new Date().getTime(), quality: 80 },
+      async (err, ress) => {
+        try {
+          if (err) throw err;
+          console.log(ress);
+          const newPost = await createPost(
+            genPostId(),
+            user._id,
+            req.body.postHeader,
+            new Date(),
+            ress.secure_url,
+            req.body.src_type
+          );
+          const comment = new comments({
+            commentPost: newPost._id,
+          });
+          user.posts.push(newPost._id);
+          await comment.save();
+          if (err) return new Error("Failed to load your image");
+          newPost.postComments.push(comment._id);
+          await newPost.save();
+          await user.save();
+          res.send(newPost);
+        } catch (e) {
+          console.log(e);
+          return new Error("Something went wrong");
+        }
+      }
+    );
   }
 );
 
