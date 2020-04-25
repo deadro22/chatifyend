@@ -22,10 +22,12 @@ module.exports = function (io) {
       });
     });
   });
-  io.of("/home/posts").on("connection", (socket) => {
+  io.of("/streams/stream").on("connection", (socket) => {
     socket.on("homePostsJoin", (room) => {
       socket.join(room);
-      console.log(room);
+      socket.on("streamStart", (stream) => {
+        io.of("/streams/stream").to(room).emit("stream", stream);
+      });
     });
   });
 };
