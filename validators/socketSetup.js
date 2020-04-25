@@ -23,12 +23,8 @@ module.exports = function (io) {
     });
   });
   io.of("/streams/stream").on("connection", (socket) => {
-    socket.on("homePostsJoin", (room) => {
-      socket.join(room);
-      socket.on("streamStart", (stream) => {
-        console.log(stream);
-        io.of("/streams/stream").to(room).emit("stream", stream);
-      });
+    socket.on("streamStart", (data) => {
+      io.of("/streams/stream").emit("stream", data);
     });
   });
 };
