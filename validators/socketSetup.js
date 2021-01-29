@@ -23,8 +23,8 @@ module.exports = function (io) {
     });
   });
   io.of("/streams/stream").on("connection", (socket) => {
-    socket.on("streamStart", (data) => {
-      io.of("/streams/stream").emit("stream", data);
+    socket.on("test", (stream) => {
+      io.of("/streams/stream").emit("testRes", stream);
     });
   });
 };

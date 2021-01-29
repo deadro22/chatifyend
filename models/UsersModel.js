@@ -21,6 +21,22 @@ const user = new mongoose.Schema({
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "users" }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: "users" }],
   followRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "users" }],
+  reputation: {
+    upVotes: { type: Number, default: 0 },
+    downVotes: { type: Number, default: 0 },
+  },
+  favGames: [
+    {
+      type: String,
+    },
+  ],
+  otherGames: [
+    {
+      type: String,
+    },
+  ],
+  prfLanguage: { type: String },
+  isLookingForPlayers: { type: Boolean, default: false },
   posts: [{ type: mongoose.Schema.Types.ObjectId, ref: "posts" }],
 });
 

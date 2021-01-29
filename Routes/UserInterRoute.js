@@ -61,11 +61,7 @@ router.post(
   "/profile/:username/update",
   upload.single("profile_image"),
   async (req, res) => {
-    const us_prf = await getProfile(req, res, req.params.username);
-    if (!us_prf) return res.status(404).send("User does not exist");
-    if (!us_prf._id.equals(req.user._id))
-      return res.status(403).send("unauthorized: not your profile");
-
+    const us_prf = await getProfile(req, res, req.user.username);
     if (!req.file) {
       const profileUpdateData = {};
       if (req.body.username) profileUpdateData.username = req.body.username;
@@ -103,6 +99,8 @@ router.post(
             profileUpdateData.profileDescription = req.body.profileDescription;
           if (prfImageUpdated && prfImageUpdated !== "")
             profileUpdateData.profileImage = prfImageUpdated;
+          if (req.body.prfPrivate)
+            profileUpdateData.private = req.body.prfPrivate;
           const newUser = await users
             .findOneAndUpdate(
               { _id: us_prf._id },
